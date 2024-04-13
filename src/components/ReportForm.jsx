@@ -1,12 +1,36 @@
-import React, { useState, useEffect } from 'react';
+import { useState,useEffect } from 'react'
 import Web3 from 'web3';
-import './ReportForm.css';
+import axios from 'axios';
 import { AES } from 'crypto-js';
 import contractABI from './Abi.json';
-import axios from 'axios';
+import './App.css';
 
-const encryptionKey = process.env.REACT_APP_ENCRYPTION_KEY;
-const contractAddress = process.env.REACT_APP_CONTRACT_ADDRESS;
+
+const getEncryptionKey = () => {
+  // Check if the encryption key is already stored in local storage
+  let encryptionKey = localStorage.getItem('encryptionKey');
+
+  // If the encryption key is not stored, generate a new one
+  if (!encryptionKey) {
+    encryptionKey = generateEncryptionKey();
+    // Store the generated encryption key in local storage for future use
+    localStorage.setItem('encryptionKey', encryptionKey);
+  }
+
+  return encryptionKey;
+};
+
+const generateEncryptionKey = () => {
+  const keyLength = 32; // 256 bits
+  const keyArray = new Uint8Array(keyLength);
+  crypto.getRandomValues(keyArray);
+  const encryptionKey = Array.from(keyArray)
+    .map(byte => String.fromCharCode(byte))
+    .join('');
+    console.log('Generated Encryption Key:', encryptionKey);
+  return encryptionKey;
+};
+const contractAddress =import.meta.env.VITE_REACT_APP_CONTRACT_ADDRESS;
 const districtOptions = [
   'Alappuzha', 'Ernakulam', 'Idukki', 'Kannur', 'Kasaragod',
   'Kollam', 'Kottayam', 'Kozhikode', 'Malappuram', 'Palakkad',
@@ -20,8 +44,12 @@ const ReportForm = () => {
   const [exciseZone, setExciseZone] = useState('');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [photoUrl, setPhotoUrl] = useState('');
-  const [videoUrl, setVideoUrl] = useState('');
+  const [photo, setPhoto] = useState([]);
+  const [video, setVideo] = useState([]);
+  
+
+  const [uploading, setUploading] = useState(false);
+  const [uploadSuccess, setUploadSuccess] = useState(false);
 
   useEffect(() => {
     const initializeWeb3 = async () => {
@@ -57,42 +85,58 @@ const ReportForm = () => {
     initializeWeb3();
   }, []);
 
+
   const encryptData = (data) => {
+    const encryptionKey = getEncryptionKey();
     const encryptedData = AES.encrypt(data, encryptionKey).toString();
     return encryptedData;
   };
 
-  const uploadToPinata = async (file) => {
-    try {
-      const fileData = new FormData();
-      fileData.append("file", file);
 
-      const responseData = await axios({
+
+  const [file , setFile] =useState("");
+
+  const handleSubmit = async (e) =>{
+    e.preventDefault();
+   try{
+
+    const submitter = accounts[0];
+    setUploading(true);
+    setUploadSuccess(false);
+
+    const fileData = new FormData();
+      fileData.append("file",photo);
+
+      const responseData= await axios({
         method: "post",
         url: "https://api.pinata.cloud/pinning/pinFileToIPFS",
-        data: fileData,
+        data:fileData,
         headers: {
-          pinata_api_key: process.env.REACT_APP_PINATA_API_KEY,
-          pinata_secret_api_key: process.env.REACT_APP_PINATA_SECRET_KEY,
-          "Content-Type": "multipart/form-data",
+          pinata_api_key:import.meta.env.VITE_PINATA_API_KEY,
+          pinata_secret_api_key:import.meta.env.VITE_PINATA_SECRET_KEY,
+          "Content-Type":"multipart/form-data",
         },
       });
+      const photoHash = "https://gateway.pinata.cloud/ipfs/" + responseData.data.IpfsHash;
+      console.log(photoHash);
 
-      return responseData.data.IpfsHash;
-    } catch (err) {
-      console.log(err);
-      throw new Error('Error uploading file to Pinata');
-    }
-  };
+      const videoData = new FormData();
+      videoData.append("file",video);
+      const responseData2= await axios({
+        method: "post",
+        url: "https://api.pinata.cloud/pinning/pinFileToIPFS",
+        data:fileData,
+        headers: {
+          pinata_api_key:import.meta.env.VITE_PINATA_API_KEY,
+          pinata_secret_api_key:import.meta.env.VITE_PINATA_SECRET_KEY,
+          "Content-Type":"multipart/form-data",
+        },
+      });
+      const videoHash = "https://gateway.pinata.cloud/ipfs/" + responseData.data.IpfsHash;
+      console.log(videoHash);
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-
-    try {
-      const submitter = accounts[0];
-
-      const photoHash = photoUrl ? await uploadToPinata(photoUrl) : null;
-      const videoHash = videoUrl ? await uploadToPinata(videoUrl) : null;
+      setUploading(false);
+      setUploadSuccess(true);
 
       await contract.methods
         .submitReport(
@@ -101,56 +145,126 @@ const ReportForm = () => {
           encryptData(title),
           encryptData(description),
           encryptData(photoHash),
-          encryptData(videoHash)
+          encryptData(videoHash),
+          
+         
         )
-        .send({ from: submitter });
+        .send({ from: submitter })
 
       setDistrict('');
       setExciseZone('');
       setTitle('');
       setDescription('');
-      setPhotoUrl('');
-      setVideoUrl('');
+      setPhoto([]);
+     
+      setUploadSuccess(false);
 
       alert('Report submitted successfully!');
-    } catch (error) {
-      console.error('Error submitting report:', error);
-      alert('An error occurred while submitting the report. Please try again.');
-    }
+    
+   }catch(err){
+    console.log(err);
+    alert('An error occurred while submitting the report. Please try again.');
+   }
   };
+
+  const handlePhotoChange = (event) => {
+    const file = event.target.files[0];
+    setPhoto(file);
+  };
+
+  const handleVideoChange = (event) => {
+    const file = event.target.files[0];
+    setVideo(file);
+  };
+
+
 
   return (
     <form onSubmit={handleSubmit} className="report-form-container">
-      <div className="report-form">
-        <h1 className="report-form-heading">Submit Report</h1>
-        <div className="input-container">
-          {/* Existing form fields */}
-          {/* Existing form fields */}
-          <label>
-            Photo:
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(e) => setPhotoUrl(e.target.files[0])}
-              className="report-form-input"
-            />
-          </label>
-          <label>
-            Video:
-            <input
-              type="file"
-              accept="video/*"
-              onChange={(e) => setVideoUrl(e.target.files[0])}
-              className="report-form-input"
-            />
-          </label>
-        </div>
-        <button type="submit" className="report-form-button">
-          Submit Report
-        </button>
-      </div>
-    </form>
-  );
-};
+    <div className="report-form">
+      <h1 className="report-form-heading">Submit Report</h1>
+      <div className="input-container">
+        {/* Existing form fields */}
+        <label>
+          District:
+          <select
+            value={district}
+            onChange={(e) => setDistrict(e.target.value)}
+            className="report-form-input"
+            required
+          >
+            <option value="" disabled>Select a district</option>
+            {districtOptions.map((districtName, index) => (
+              <option key={index} value={districtName}>
+                {districtName}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          Area:
+          <input
+            type="text"
+            placeholder="Enter Your Area"
+            value={exciseZone}
+            onChange={(e) => setExciseZone(e.target.value)}
+            className="report-form-input"
+            required
+          />
+        </label>
+        <label>
+          Title:
+          <input
+            type="text"
+            placeholder="Enter Title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            className="report-form-input"
+            required
+          />
+        </label>
+        <label>
+          Description:
+          <textarea
+            placeholder="Enter Description"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            className="report-form-input"
+            required
+          />
+        </label>
+      <label>
+          Photo:
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handlePhotoChange}
+            className="report-form-input"
+          />
+        </label>
 
-export default ReportForm;
+        <label>
+          Video:
+          <input
+            type="file"
+            accept="video/*"
+            onChange={handleVideoChange}
+            className="report-form-input"
+          />
+        </label>
+       
+         
+      </div>
+      {uploading && <p>Uploading...</p>}
+      {uploadSuccess && <p>Upload Successful &#10003;</p>}
+      <button type="submit" className="report-form-button">
+        Submit Report
+      </button>
+    </div>
+  </form>
+     
+  )
+
+}
+
+export default ReportForm

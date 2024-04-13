@@ -221,34 +221,41 @@
 		"name": "getReportById",
 		"outputs": [
 			{
-				"internalType": "string",
+				"components": [
+					{
+						"internalType": "string",
+						"name": "district",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "Area",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "title",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "description",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "photoHash",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "videoHash",
+						"type": "string"
+					}
+				],
+				"internalType": "struct AnonymousReportingSystem.Report",
 				"name": "",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "",
-				"type": "string"
+				"type": "tuple"
 			}
 		],
 		"stateMutability": "view",

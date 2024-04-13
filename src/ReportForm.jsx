@@ -6,30 +6,9 @@ import contractABI from './Abi.json';
 import './App.css';
 
 
-const getEncryptionKey = () => {
-  // Check if the encryption key is already stored in local storage
-  let encryptionKey = localStorage.getItem('encryptionKey');
 
-  // If the encryption key is not stored, generate a new one
-  if (!encryptionKey) {
-    encryptionKey = generateEncryptionKey();
-    // Store the generated encryption key in local storage for future use
-    localStorage.setItem('encryptionKey', encryptionKey);
-  }
 
-  return encryptionKey;
-};
-
-const generateEncryptionKey = () => {
-  const keyLength = 32; // 256 bits
-  const keyArray = new Uint8Array(keyLength);
-  crypto.getRandomValues(keyArray);
-  const encryptionKey = Array.from(keyArray)
-    .map(byte => String.fromCharCode(byte))
-    .join('');
-    console.log('Generated Encryption Key:', encryptionKey);
-  return encryptionKey;
-};
+const encryptionKey = import.meta.env.VITE_REACT_APP_ENCRYPTION_KEY;
 const contractAddress =import.meta.env.VITE_REACT_APP_CONTRACT_ADDRESS;
 const districtOptions = [
   'Alappuzha', 'Ernakulam', 'Idukki', 'Kannur', 'Kasaragod',
@@ -87,7 +66,7 @@ const ReportForm = () => {
 
 
   const encryptData = (data) => {
-    const encryptionKey = getEncryptionKey();
+    
     const encryptedData = AES.encrypt(data, encryptionKey).toString();
     return encryptedData;
   };
@@ -106,7 +85,6 @@ const ReportForm = () => {
 
     const fileData = new FormData();
       fileData.append("file",photo);
-
       const responseData= await axios({
         method: "post",
         url: "https://api.pinata.cloud/pinning/pinFileToIPFS",
@@ -117,6 +95,7 @@ const ReportForm = () => {
           "Content-Type":"multipart/form-data",
         },
       });
+
       const photoHash = "https://gateway.pinata.cloud/ipfs/" + responseData.data.IpfsHash;
       console.log(photoHash);
 

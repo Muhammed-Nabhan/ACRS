@@ -1,4 +1,7 @@
-[
+import React, { useState, useEffect } from 'react';
+import Web3 from 'web3';
+
+const contractABI = [
 	{
 		"inputs": [],
 		"stateMutability": "nonpayable",
@@ -375,4 +378,66 @@
 		"stateMutability": "view",
 		"type": "function"
 	}
-]
+];
+
+const contractAddress = '0xfE59D6F12B0B126cce51d7e3CE482E6bfbC37567'; // Replace with your actual contract address
+
+let web3;
+
+if (window.ethereum) {
+  web3 = new Web3(window.ethereum);
+  try {
+    await window.ethereum.enable();
+  } catch (error) {
+    console.error("User denied account access");
+  }
+} else if (window.web3) {
+  web3 = new Web3(window.web3.currentProvider);
+} else {
+  console.error("Non-Ethereum browser detected. You should consider trying MetaMask!");
+}
+
+const contractInstance = new web3.eth.Contract(contractABI, contractAddress);
+
+const Notification = () => {
+  const [notifications, setNotifications] = useState([]);
+
+  useEffect(() => {
+    fetchReportSubmissionEvents();
+    const interval = setInterval(fetchReportSubmissionEvents, 10000); // Poll for new report submission events every 10 seconds
+    return () => clearInterval(interval);
+  }, []);
+
+  const fetchReportSubmissionEvents = async () => {
+    try {
+      const events = await contractInstance.getPastEvents('ReportSubmitted', {
+        fromBlock: 0,
+        toBlock: 'latest'
+      });
+      const newNotifications = events.map(event => {
+        const reportId = event.returnValues.reportId;
+        const timestamp = event.returnValues.timestamp * 1000;
+        return {
+          message: `New report submitted: ${reportId}`,
+          time: new Date(timestamp).toLocaleString()
+        };
+      });
+      setNotifications(prevNotifications => [...prevNotifications, ...newNotifications]);
+    } catch (error) {
+      console.error('Error fetching events:', error);
+    }
+  };
+
+  return (
+    <div>
+      {notifications.map((notification, index) => (
+        <div key={index}>
+          <p>{notification.message}</p>
+          <p>{notification.time}</p>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+export default Notification;

@@ -31,13 +31,6 @@
 		"type": "event"
 	},
 	{
-		"inputs": [],
-		"name": "fetchReportSubmissionEvents",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
 		"inputs": [
 			{
 				"internalType": "address",
@@ -221,53 +214,41 @@
 		"name": "getReportById",
 		"outputs": [
 			{
-				"internalType": "string",
+				"components": [
+					{
+						"internalType": "string",
+						"name": "district",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "Area",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "title",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "description",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "photoHash",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "videoHash",
+						"type": "string"
+					}
+				],
+				"internalType": "struct AnonymousReportingSystem.Report",
 				"name": "",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "",
-				"type": "string"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "string",
-				"name": "_reportId",
-				"type": "string"
-			}
-		],
-		"name": "getSenderByReportId",
-		"outputs": [
-			{
-				"internalType": "address",
-				"name": "",
-				"type": "address"
+				"type": "tuple"
 			}
 		],
 		"stateMutability": "view",
@@ -338,25 +319,6 @@
 				"internalType": "string",
 				"name": "videoHash",
 				"type": "string"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "string",
-				"name": "",
-				"type": "string"
-			}
-		],
-		"name": "reportSenders",
-		"outputs": [
-			{
-				"internalType": "address",
-				"name": "",
-				"type": "address"
 			}
 		],
 		"stateMutability": "view",

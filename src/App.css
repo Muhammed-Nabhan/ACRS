@@ -1,11 +1,13 @@
 /* Styles for the report form container */
 .report-form-container {
+    color: green;
     display: flex;
     justify-content: center;
     align-items: center;
     height: 100vh;
     background-color: #222;
   }
+  
   
   /* Styles for the report form */
   .report-form {
@@ -16,6 +18,7 @@
     max-width: 600px;
     width: 100%;
   }
+
   
   /* Heading styles */
   .report-form-heading {
@@ -33,6 +36,7 @@
   
   /* Input styles */
   .report-form-input {
+    margin-left: 76px;
     padding: 10px;
     border-radius: 5px;
     border: 1px solid #777;
@@ -54,6 +58,7 @@
   
   /* Button styles */
   .report-form-button {
+    margin-top: 10px;
     padding: 10px 20px;
     background-color: #4caf50;
     color: #fff;

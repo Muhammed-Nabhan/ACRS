@@ -1,4 +1,7 @@
-[
+import React, { useState } from 'react';
+import Web3 from 'web3';
+
+const abiJson = [
 	{
 		"inputs": [],
 		"stateMutability": "nonpayable",
@@ -375,4 +378,57 @@
 		"stateMutability": "view",
 		"type": "function"
 	}
-]
+];
+
+// Initialize Web3
+const web3 = new Web3(window.ethereum);
+
+// Contract address
+const contractAddress = '0xfE59D6F12B0B126cce51d7e3CE482E6bfbC37567';
+
+// Contract instance
+const contract = new web3.eth.Contract(abiJson, contractAddress);
+
+function RevokeAccess() {
+    const [userAddress, setUserAddress] = useState('');
+    const [message, setMessage] = useState('');
+
+    const revokeAccess = async () => {
+        try {
+            // Request access to Metamask
+            await window.ethereum.enable();
+
+            // Get user's Ethereum address
+            const accounts = await web3.eth.getAccounts();
+            const userAccount = accounts[0];
+
+            // Call contract method to revoke access
+            await contract.methods.revokeAccess(userAddress).send({ from: userAccount });
+
+            setMessage('Access revoked successfully!');
+        } catch (error) {
+            console.error('Error revoking access:', error);
+            setMessage('Error revoking access. See console for details.');
+        }
+    };
+
+    return (
+        <div>
+            <h1>Revoke Access</h1>
+            <form onSubmit={(e) => { e.preventDefault(); revokeAccess(); }}>
+                <label htmlFor="userAddress">Enter User Address:</label>
+                <input
+                    type="text"
+                    id="userAddress"
+                    value={userAddress}
+                    onChange={(e) => setUserAddress(e.target.value)}
+                    required
+                />
+                <button type="submit">Revoke Access</button>
+            </form>
+            {message && <p>{message}</p>}
+        </div>
+    );
+}
+
+export default RevokeAccess;
