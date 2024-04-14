@@ -520,7 +520,7 @@ const ReportViewer = () => {
 
   return (
     <div>
-      <h1>All Reports</h1>
+      <h1>All Reports today</h1>
       <ul>
         {reportsData.map((report, index) => (
           <li key={index} onClick={() => handleReportClick(report.reportId)}>
