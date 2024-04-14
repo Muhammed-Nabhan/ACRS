@@ -3,6 +3,9 @@ import Web3 from 'web3';
 import axios from 'axios';
 import { AES } from 'crypto-js';
 
+const pinataApiKey = import.meta.env.VITE_PINATA_API_KEY;
+const pinataSecretApiKey = import.meta.env.VITE_PINATA_SECRET_KEY;
+
 const contractABI = [
   
     {
@@ -384,7 +387,7 @@ const contractABI = [
   
 ];
 
-const contractAddress = '0xfE59D6F12B0B126cce51d7e3CE482E6bfbC37567'
+const contractAddress = '0xfE59D6F12B0B126cce51d7e3CE482E6bfbC37567';
 const encryptionKey = import.meta.env.VITE_REACT_APP_ENCRYPTION_KEY;
 
 const ReportViewer = () => {

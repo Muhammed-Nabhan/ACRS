@@ -3,7 +3,7 @@ import React from 'react';
 import GrantAdminAccess from './GrantAdminAccess';
 import RevokeAdminAccess from './RevokeAdminAccess';
 import ReportViewer from './ReportViewer';
-import ReportNotification from './ReportNotification';
+
 /*
 import SearchReport from './SearchReport';
 
