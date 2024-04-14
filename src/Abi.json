@@ -31,13 +31,6 @@
 		"type": "event"
 	},
 	{
-		"inputs": [],
-		"name": "fetchReportSubmissionEvents",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
 		"inputs": [
 			{
 				"internalType": "address",

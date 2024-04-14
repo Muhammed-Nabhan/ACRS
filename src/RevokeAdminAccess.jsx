@@ -34,13 +34,6 @@ const abiJson = [
 		"type": "event"
 	},
 	{
-		"inputs": [],
-		"name": "fetchReportSubmissionEvents",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
 		"inputs": [
 			{
 				"internalType": "address",
@@ -384,7 +377,7 @@ const abiJson = [
 const web3 = new Web3(window.ethereum);
 
 // Contract address
-const contractAddress = '0xfE59D6F12B0B126cce51d7e3CE482E6bfbC37567';
+const contractAddress = '0xf64160f40aEf834ACEc380476ddFe452643f2fA4';
 
 // Contract instance
 const contract = new web3.eth.Contract(abiJson, contractAddress);
