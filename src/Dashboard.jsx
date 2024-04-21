@@ -1,7 +1,7 @@
 import React from 'react';
  // Import your dashboard CSS file
 import GrantAdminAccess from './GrantAdminAccess';
-import RevokeAdminAccess from './RevokeAdminAccess';
+import RevokeAdminAccess from './RevokeAdminAccessmine';
 import ReportViewer from './ReportViewer';
 
 /*
