@@ -421,31 +421,56 @@ const ReportViewer = () => {
     }
   };
 
-  const handleNewReportEvent = async () => {
-    try {
-      const latestReportIds = await contractInstance.methods.getAllReportIds().call();
-      setAllReportIds(latestReportIds);
+  console.log('reportsData:', reportsData);
+  console.log('selectedReport:', selectedReport);
 
-      for (const reportId of latestReportIds) {
-        const report = await contractInstance.methods.getReportById(reportId).call();
-        const decryptedData = {
-          district: decryptData(report[0]),
-          Area: decryptData(report[1]),
-          title: decryptData(report[2]),
-        };
-        setReportsData((prevReports) => [
-          ...prevReports,
-          {
-            reportId: reportId,
-            district: decryptedData.district,
-            Area: decryptedData.Area,
-            title: decryptedData.title,
-          },
-        ]);
-      }
-    } catch (error) {
-      console.error('Error handling new report event:', error);
-    }
+  const handleNewReportEvent = async (event) => {
+	try {
+	  const reportId = event.returnValues.reportId;
+	  console.log("New report ID submitted:", reportId);
+  
+	  const latestReportIds = await contractInstance.methods.getAllReportIds().call();
+	  setAllReportIds(latestReportIds);
+  
+	  const fetchedReportsData = [];
+  
+	  for (const reportId of latestReportIds) {
+		const report = await contractInstance.methods.getReportById(reportId).call();
+		const decryptedData = {
+		  district: decryptData(report[0]),
+		  Area: decryptData(report[1]),
+		  title: decryptData(report[2]),
+		  description: decryptData(report[3]),
+		  photoHash: report[4],
+		  videoHash: report[5],
+		};
+  
+		const multimediaContent = await fetchMultimediaContent(decryptedData.photoHash, decryptedData.videoHash);
+  
+		fetchedReportsData.push({
+		  reportId: reportId,
+		  district: decryptedData.district,
+		  Area: decryptedData.Area,
+		  title: decryptedData.title,
+		  description: decryptedData.description,
+		  photoUrl: multimediaContent.photoUrl,
+		  videoUrl: multimediaContent.videoUrl,
+		});
+		console.log("Fetched report data:", decryptedData);
+		console.log("Fetched multimedia content:", multimediaContent);
+	  
+	  }
+  
+	  setReportsData(fetchedReportsData);
+	  console.log("Updated reportsData:", fetchedReportsData);
+  
+	} catch (error) {
+	  console.error('Error handling new report event:', error);
+	}
+  };
+
+  const handleReportClick = (report) => {
+	setSelectedReport(report);
   };
 
   useEffect(() => {
