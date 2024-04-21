@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import web3 from './web3';
+import Web3 from 'web3';
 
+
+const web3 = new Web3(window.ethereum);
 const contractABI = [
     {
 		"inputs": [],
@@ -377,7 +379,7 @@ const contractAddress = '0xf64160f40aEf834ACEc380476ddFe452643f2fA4';
 
 const contract = new web3.eth.Contract(contractABI, contractAddress);
 
-const SmartContractInteraction = () => {
+const GrantAdminAccess = () => {
   const [metamaskAddress, setMetamaskAddress] = useState('');
 
   const grantAccess = async () => {
@@ -386,7 +388,7 @@ const SmartContractInteraction = () => {
       const accounts = await web3.eth.getAccounts();
       const userAccount = accounts[0];
 
-      await contract.methods.grantAccess(metamaskAddress).send({ from: userAccount });
+      const result = await contract.methods.grantAccess(metamaskAddress).send({ from: userAccount });
       console.log('Access granted successfully:', result);
       alert('Access granted successfully');
     } catch (error) {
@@ -412,4 +414,4 @@ const SmartContractInteraction = () => {
   );
 };
 
-export default SmartContractInteraction;
+export default GrantAdminAccess;
