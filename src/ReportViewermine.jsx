@@ -1,12 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Web3 from 'web3';
-// Initialize Web3
-const web3 = new Web3(window.ethereum);
+import axios from 'axios';
+import { AES } from 'crypto-js';
 
-// Contract address and ABI
-const contractAddress = '0xf64160f40aEf834ACEc380476ddFe452643f2fA4';
-const contractABI =  [
-    {
+const pinataApiKey = import.meta.env.VITE_PINATA_API_KEY;
+const pinataSecretApiKey = import.meta.env.VITE_PINATA_SECRET_KEY;
+
+const contractABI = [
+  {
 		"inputs": [],
 		"stateMutability": "nonpayable",
 		"type": "constructor"
@@ -375,45 +376,170 @@ const contractABI =  [
 		"stateMutability": "view",
 		"type": "function"
 	}
-  ];
-// Contract instance
-const contract = new web3.eth.Contract(contractABI, contractAddress);
-const RevokeAdminAccess = () => {
-	const [metamaskAddress, setMetamaskAddress] = useState('');
-// Grant Access function
-const grantAccess = async () => {
-    
+];
 
+const contractAddress = '0xf64160f40aEf834ACEc380476ddFe452643f2fA4';
+const encryptionKey = import.meta.env.VITE_REACT_APP_ENCRYPTION_KEY;
+
+const ReportViewer = () => {
+  const [web3, setWeb3] = useState(null);
+  const [contractInstance, setContractInstance] = useState(null);
+  const [allReportIds, setAllReportIds] = useState([]);
+  const [reportsData, setReportsData] = useState([]);
+  const [selectedReport, setSelectedReport] = useState(null);
+
+  const decryptData = (encryptedData) => {
+    return AES.decrypt(encryptedData, encryptionKey).toString();
+  };
+
+  const fetchMultimediaContent = async (photoHash, videoHash) => {
     try {
-        await ethereum.enable();
-        const accounts = await web3.eth.getAccounts();
-        const userAccount = accounts[0];
+      const photoResponse = await axios.get(photoHash, {
+        headers: {
+          pinata_api_key: pinataApiKey,
+          pinata_secret_api_key: pinataSecretApiKey,
+        },
+      });
 
-        const result = await contract.methods.revokeAccess(metamaskAddress).send({ from: userAccount });
-        console.log('Access revoked successfully:', result);
-        alert('Access revoked successfully');
+      const videoResponse = await axios.get(videoHash, {
+        headers: {
+          pinata_api_key: pinataApiKey,
+          pinata_secret_api_key: pinataSecretApiKey,
+        },
+      });
+
+      return {
+        photoUrl: photoResponse.data.url,
+        videoUrl: videoResponse.data.url,
+      };
     } catch (error) {
-        console.error('Error revoking access:', error);
+      console.error('Error fetching multimedia content:', error);
+      return {
+        photoUrl: null,
+        videoUrl: null,
+      };
     }
-};
+  };
 
-// Add event listener to the Grant Access button
-return (
+  console.log('reportsData:', reportsData);
+  console.log('selectedReport:', selectedReport);
+
+  const handleNewReportEvent = async (event) => {
+	try {
+	  const reportId = event.returnValues.reportId;
+	  console.log("New report ID submitted:", reportId);
+  
+	  const latestReportIds = await contractInstance.methods.getAllReportIds().call();
+	  setAllReportIds(latestReportIds);
+  
+	  const fetchedReportsData = [];
+  
+	  for (const reportId of latestReportIds) {
+		const report = await contractInstance.methods.getReportById(reportId).call();
+		const decryptedData = {
+		  district: decryptData(report[0]),
+		  Area: decryptData(report[1]),
+		  title: decryptData(report[2]),
+		  description: decryptData(report[3]),
+		  photoHash: report[4],
+		  videoHash: report[5],
+		};
+  
+		const multimediaContent = await fetchMultimediaContent(decryptedData.photoHash, decryptedData.videoHash);
+  
+		fetchedReportsData.push({
+		  reportId: reportId,
+		  district: decryptedData.district,
+		  Area: decryptedData.Area,
+		  title: decryptedData.title,
+		  description: decryptedData.description,
+		  photoUrl: multimediaContent.photoUrl,
+		  videoUrl: multimediaContent.videoUrl,
+		});
+		console.log("Fetched report data:", decryptedData);
+		console.log("Fetched multimedia content:", multimediaContent);
+	  
+	  }
+  
+	  setReportsData(fetchedReportsData);
+	  console.log("Updated reportsData:", fetchedReportsData);
+  
+	} catch (error) {
+	  console.error('Error handling new report event:', error);
+	}
+  };
+
+  const handleReportClick = (report) => {
+	setSelectedReport(report);
+  };
+
+  useEffect(() => {
+    const initWeb3 = async () => {
+      try {
+        if (window.ethereum) {
+          const newWeb3 = new Web3(window.ethereum);
+          await window.ethereum.enable();
+          setWeb3(newWeb3);
+        } else if (window.web3) {
+          const newWeb3 = new Web3(window.web3.currentProvider);
+          setWeb3(newWeb3);
+        } else {
+          console.log('Non-Ethereum browser detected. You should consider trying MetaMask!');
+        }
+
+        if (web3) {
+          const instance = new web3.eth.Contract(contractABI, contractAddress);
+          setContractInstance(instance);
+        }
+      } catch (error) {
+        console.error('Error initializing Web3:', error);
+      }
+    };
+
+    initWeb3();
+
+    if (contractInstance) {
+      const newReportEvent = contractInstance.events.NewReportSubmitted();
+      newReportEvent.on('data', handleNewReportEvent);
+
+      return () => {
+        newReportEvent.removeAllListeners();
+      };
+    }
+  }, [contractInstance]);
+
+  return (
     <div>
-      <h1>Revoke Access</h1>
-      <form onSubmit={(e) => { e.preventDefault(); grantAccess(); }}>
-        <label htmlFor="metamaskId">Metamask Address:</label>
-        <input
-          type="text"
-          id="metamaskId"
-          value={metamaskAddress}
-          onChange={(e) => setMetamaskAddress(e.target.value)}
-          required
-        />
-        <button type="submit">Revoke Access</button>
-      </form>
+      <h1>All Reports today</h1>
+      <ul>
+        {reportsData.map((report, index) => (
+          <li key={index} onClick={() => handleReportClick(report.reportId)}>
+            <p>Report ID: {report.reportId}</p>
+            <p>District: {report.district}</p>
+            <p>Area: {report.Area}</p>
+            <p>Title: {report.title}</p>
+          </li>
+        ))}
+      </ul>
+      {selectedReport && (
+        <div>
+          <h2>Selected Report</h2>
+          <p>Report ID: {selectedReport.reportId}</p>
+          <p>District: {selectedReport.district}</p>
+          <p>Area: {selectedReport.Area}</p>
+          <p>Title: {selectedReport.title}</p>
+          <p>Description: {selectedReport.description}</p>
+          {selectedReport.photoUrl && <img src={selectedReport.photoUrl} alt="Photo" />}
+          {selectedReport.videoUrl && (
+            <video controls>
+              <source src={selectedReport.videoUrl} type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+          )}
+        </div>
+      )}
     </div>
   );
 };
 
-export default RevokeAdminAccess;
+export default ReportViewer;

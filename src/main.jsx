@@ -72,7 +72,7 @@ const App = () => {
       ) : (
         <>
           {userRole === 'admin' ? (
-            <Dashboard />
+            <Dashboard  userAccount={accounts[0]}/>
           ) : (
             <ReportForm />
           )}

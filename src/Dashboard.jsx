@@ -1,7 +1,7 @@
 import React from 'react';
  // Import your dashboard CSS file
 import GrantAdminAccess from './GrantAdminAccess';
-import RevokeAdminAccess from './RevokeAdminAccessmine';
+import RevokeAdminAccess from './RevokeAdminAccess';
 import ReportViewer from './ReportViewer';
 
 /*
@@ -11,7 +11,7 @@ import ReportDetails from './ReportDetails';
 import RewardAnonymousReporter from './RewardAnonymousReporter';
 import ReportChart from './ReportChart';*/
 
-const Dashboard = () => {
+const Dashboard = ({ userAccount })  => {
   return (
     <div className="page-wrapper">
       <header className="header-desktop">
@@ -46,7 +46,7 @@ const Dashboard = () => {
               <RevokeAdminAccess />
             </section>
             <section id="report-viewer">
-              <ReportViewer />
+              <ReportViewer userAccount={userAccount}/>
             </section>
            
             
