@@ -4,6 +4,7 @@ import GrantAdminAccess from './GrantAdminAccess';
 import RevokeAdminAccess from './RevokeAdminAccess';
 import ReportViewer from './ReportViewer';
 
+
 /*
 import SearchReport from './SearchReport';
 
@@ -11,7 +12,7 @@ import ReportDetails from './ReportDetails';
 import RewardAnonymousReporter from './RewardAnonymousReporter';
 import ReportChart from './ReportChart';*/
 
-const Dashboard = ({ userAccount })  => {
+const Dashboard = ()  => {
   return (
     <div className="page-wrapper">
       <header className="header-desktop">
@@ -46,7 +47,7 @@ const Dashboard = ({ userAccount })  => {
               <RevokeAdminAccess />
             </section>
             <section id="report-viewer">
-              <ReportViewer userAccount={userAccount}/>
+              <ReportViewer />
             </section>
            
             

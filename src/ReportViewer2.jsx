@@ -1,71 +1,64 @@
-import React, { useState, useEffect } from 'react';
-import Web3 from 'web3';
-import contractABI from './Abi.json';
+import React, { useState, useEffect } from "react";
+import Web3 from "web3";
+import contractABI from "./Abi.json"; // Replace with your ABI file
+const contractAddress = "0xf64160f40aEf834ACEc380476ddFe452643f2fA4"; // Replace with your contract address
 
-function App({userAccount}) {
+const TotalContractsDeployed = () => {
   const [web3, setWeb3] = useState(null);
+  const [accounts, setAccounts] = useState([]);
   const [contract, setContract] = useState(null);
-  const [reportIds, setReportIds] = useState([]);
-  const [selectedReportId, setSelectedReportId] = useState('');
-  const [error, setError] = useState(null);
+  const [totalContractsDeployed, setTotalContractsDeployed] = useState(0);
 
   useEffect(() => {
-    async function init() {
-      // Connect to MetaMask provider
+    const init = async () => {
+      // Connect to Metamask
       if (window.ethereum) {
+        const web3Instance = new Web3(window.ethereum);
+        setWeb3(web3Instance);
         try {
-          await window.ethereum.request({ method: 'eth_requestAccounts' });
-          const web3Instance = new Web3(window.ethereum);
-          setWeb3(web3Instance);
-          const contractInstance = new web3Instance.eth.Contract(
-            contractABI,
-             '0xf64160f40aEf834ACEc380476ddFe452643f2fA4'
-            
-          );
-          setContract(contractInstance);
+          // Request account access
+          const accs = await window.ethereum.request({ method: "eth_requestAccounts" });
+          setAccounts(accs);
         } catch (error) {
-          console.error(error);
-          setError("Please connect to MetaMask and switch to the correct network.");
+          console.error("User denied account access");
         }
+      } else {
+        console.error("No Ethereum provider detected");
       }
-    }
+    };
     init();
   }, []);
 
   useEffect(() => {
-    async function fetchReportIds() {
-      if (contract) {
+    if (web3 !== null) {
+      const contractInstance = new web3.eth.Contract(
+        contractABI, // Use contract ABI
+        contractAddress // Use contract address
+      );
+      setContract(contractInstance);
+    }
+  }, [web3]);
+
+  useEffect(() => {
+    const fetchTotalContractsDeployed = async () => {
+      if (contract !== null) {
         try {
-          const ids = await contract.methods.getAllReportIds().call({ from: userAccount });
-          setReportIds(ids);
-          setError(null); // Reset error if fetching succeeds
+          const total = await contract.methods.getTotalContractsDeployed().call({ from: accounts[0] });
+          setTotalContractsDeployed(total);
         } catch (error) {
-          console.error(error);
-          setError("Failed to fetch report IDs. Ensure you're an admin.");
+          console.error("Error fetching total contracts deployed:", error);
         }
       }
-    }
-    fetchReportIds();
-  }, [contract]);
-
-  const handleSelectChange = (e) => {
-    setSelectedReportId(e.target.value);
-  };
+    };
+    fetchTotalContractsDeployed();
+  }, [contract, accounts]);
 
   return (
     <div>
-      <h1>Select Report ID</h1>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-      <select value={selectedReportId} onChange={handleSelectChange}>
-        <option value="">Select a report ID</option>
-        {reportIds.map((id, index) => (
-          <option key={index} value={id}>
-            {id}
-          </option>
-        ))}
-      </select>
+      <h2>Total Contracts Deployed:</h2>
+      <p>{totalContractsDeployed}</p>
     </div>
   );
-}
+};
 
-export default App;
+export default TotalContractsDeployed;
